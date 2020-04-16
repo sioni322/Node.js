@@ -9,7 +9,6 @@ var db = mongoose.connection;
 var bodyparser = require('body-parser');
 
 
-
 //Run database
 db.on('error', function() {
 	console.log('DB: Failed to connect MongoDB');
@@ -26,8 +25,7 @@ mongoose.connect('mongodb://localhost/',
 
 
 //Define model
-var User = require('../database/models/models.js');
-
+var User = require('../database/models/model_user.js');
 
 
 //Configure bodyparser
@@ -35,11 +33,9 @@ app.use(bodyparser.urlencoded({extended: true}));
 app.use(bodyparser.json());
 
 
-
 //Define router
-var router = require('../routers/routers.js');
-app.use('/', router);
-
+var router = require('../routers/router_user.js');
+app.use('/user', router);
 
 
 //Run server
