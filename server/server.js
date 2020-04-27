@@ -17,6 +17,7 @@ db.once('open', function() {
 	console.log('DB: MongoDB is running......');
 });
 
+mongoose.set('useCreateIndex', true);
 mongoose.connect('mongodb://localhost/',
 	{
 		useNewUrlParser : true,
@@ -25,7 +26,7 @@ mongoose.connect('mongodb://localhost/',
 
 
 //Define model
-var User = require('../database/models/model_user.js');
+var User = require('../database/model_user.js');
 
 
 //Configure bodyparser
@@ -36,6 +37,7 @@ app.use(bodyparser.json());
 //Define router
 var router = require('../routers/router_user.js');
 app.use('/user', router);
+
 
 
 //Run server
