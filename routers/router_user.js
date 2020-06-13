@@ -2,13 +2,12 @@
 
 var express = require('express');
 var routers = express.Router();
+var jwt = require('jsonwebtoken');
+
 var User = require('../database/model_user.js');
-//var crypto = require('../modules/module_crypto.js')
+var Project = require('../database/model_project.js');
 
-
-routers.get('/', function(request, response) {
-	response.send('User space');
-});
+const SECRETKEY = 'secretkey'
 
 
 //Create new user account
@@ -16,22 +15,20 @@ routers.post('/new', function(request, response) {
 	var user = new User();
 
 	user.Name = request.body.name;
-	user.Birth = new Date(request.body.birth);
+	user.Birth = String(request.body.birth);
 	user.PhoneNumber = request.body.phonenumber;
 	user.AccountID = request.body.accountid;
 	user.AccountPW = request.body.accountpw;
 
-	console.log(request.body);
-	console.log(user);
-
 	user.save(function(error) {
 		if(error) {
-			console.log('DB: Failed to create user account, ' + error);
+			console.log('user/new: Failed(result: 0)\t' + error.name + ': ' + error.message);
 			response.json({message: 'DB 오류가 발생하였습니다', result: 0});
 			return;
 		}
-		else
-			response.json({message: '회원가입을 축하드립니다!', result: 1});
+		console.log('user/new: Completed(result: 1)');
+		console.log(user);
+		response.json({message: '회원가입을 축하드립니다!', result: 1});
 	});
 });
 
@@ -40,18 +37,54 @@ routers.post('/new', function(request, response) {
 routers.post('/new/check', function(request, response) {
 	User.findOne({AccountID: request.body.accountid}, function(error, exist_user) {
 		if(error) {
-			console.log('DB: Failed to retrieve account ID, ' + error);
+			console.log('user/new/check: Failed(result: 0)\t' + error.name + ': ' + error.message);
 			response.json({message: 'DB 오류가 발생하였습니다', result: 0});
 			return;
 		}
 		if(!(exist_user == null)) {
-			console.log('DB: Already existing account ID, ' + error);
+			console.log('user/new/check: Failed(result: 0)\t' + 'Already existing AccountID');
 			response.json({message: '이미 존재하는 아이디 입니다', result: 0});
 			return;
 		}
 		else {
+			console.log('user/new/check: Completed(result: 1)');
 			response.json({message: '사용 가능한 아이디 입니다', result: 1});
 			return;
+		}
+	});
+});
+
+
+//Login to account
+routers.post('/login', function(request, response) {
+	User.findOne({AccountID: request.body.accountid, AccountPW: request.body.accountpw}, function(error, user) {
+		if(error) {
+			console.log('user/login: Failed(result: 0)\t' + error.name + ': ' + error.message);
+			response.json({message: '오류가 발생하였습니다', result: 0});
+			return;
+		}
+		if(user == null) {
+			console.log('user/login: Failed(result: 0)\t' + 'No account');
+			response.json({message: '존재하지 않는 아이디 입니다', result: 0});
+			return;
+		}
+
+		if(user.AccountPW != request.body.accountpw) {
+			console.log('user/login: Failed(result: 0)\t' + 'Wrong password');
+			response.json({message: '잘못된 비밀번호 입니다', result: 0});
+			return;
+		}
+		else {
+			jwt.sign({user}, SECRETKEY, {expiresIn:'1d'}, function(error, token) {
+				if(error) {
+					console.log('user/login: Failed(result: 0)\t' + 'JWT sign failed');
+					response.json({message: '회원가입에 실패하였습니다', result:0});
+					return;
+				}
+				console.log('user/login: Completed(result: 1)');
+				response.json({jwt : token, message: '안녕하세요, ' + user.AccountID + '님!', result:1});
+				return;
+			});
 		}
 	});
 });
@@ -61,40 +94,71 @@ routers.post('/new/check', function(request, response) {
 routers.delete('/del', function(request, response) {
 	User.remove({AccountID: request.body.accountid, AccountPW: request.body.accountpw}, function(error, output) {
 		if(error) {
-			console.log('DB: Failed to delete user account, ' + error);
-			response.status(500).json({message: 'DB 오류가 발생하였습니다', result: 0});
+			console.log('user/del: Failed(result: 0)\t' + error.name + ': ' + error.message);
+			response.json({message: 'DB 오류가 발생하였습니다', result: 0});
 			return;
 		}
-			response.status(204).json({message: '계정 삭제가 완료되었습니다', result: 1});
+			console.log('user/del: Completed(result: 1)');
+			response.json({message: '계정 삭제가 완료되었습니다', result: 1});
+			return;
 	});
 });
 
 
-//Login to account
-routers.post('/login', function(request, response) {
-	User.findOne({AccountID: request.body.accountid}, function(error, user) {
-		console.log(request.body);
-		
+//Show user's information
+routers.use('/mypage', function(request, response) {
+	//Check json web token
+	const token = request.headers['x-access-token'];
+	var decoded;
+
+	if(!token) {
+		console.log('user/mypage: Failed(result: -1)\t' + 'None of JWT token');
+		response.json({message: "재로그인이 필요합니다", result: -1});
+		return;
+	}
+
+	try {
+		decoded = jwt.verify(token, SECRETKEY);
+	} catch(error) {
+		console.log('user/mypage: Failed(result: -1)\t' + 'Wrong JWT token');
+		response.json({message: "재로그인이 필요합니다", result: -1});
+		return;
+	}
+
+	//Find user with JWT token information and return user information
+	User.findOne({AccountID: decoded.user.AccountID, AccountPW: decoded.user.AccountPW}, function(error, user) {
 		if(error) {
-			console.log('DB: Failed to retrieve account ID, ' + error);
+			console.log('user/mypage: Failed(result: 0)\t' + error.name + ': ' + error.message);
 			response.json({message: '오류가 발생하였습니다', result: 0});
 			return;
 		}
-		if(user == null) {
-			console.log('DB: Failed to access the account');
-			response.json({message: '존재하지 않는 아이디 입니다', result: 0});
-			return;
-		}
+		Project.find({Writer: user.AccountID}, function(error, project) {
+			if(error) {
+				console.log('user/mypage: Failed(result: 0)\t' + error.name + ': ' + error.message);
+				response.json({message: '오류가 발생하였습니다', result: 0});
+				return;
+			}
+			var res = {};
 
-		if(user.AccountPW != request.body.accountpw) {
-			console.log('DB: Failed to login(Wrong password)');
-			response.json({message: '잘못된 비밀번호 입니다', result: 0});
+			var myproject_list = {};
+			myproject_list['project'] = [];
+			myproject_list['active'] = [];
+			project.forEach(projects => {
+				myproject_list['project'].push(projects.Title);
+				myproject_list['active'].push(projects.Active); 
+			});
+
+			var user_info = {accountid: user.AccountID, birth: user.Birth, phonenumber: user.PhoneNumber,
+			point: user.Point, myproject: myproject_list, joinedproject: user.JoinedProject};
+
+			res['user'] = user_info;
+			res['result'] = 1;
+
+			console.log('user/mypage: Completed(result: 1)\t');
+			console.log(res);
+			response.json(res);
 			return;
-		}
-		else {
-			response.json({message: '안녕하세요, '+user.AccountID+'님!', result: 1});
-			return;
-		}
+		});
 	});
 });
 

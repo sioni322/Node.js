@@ -27,20 +27,35 @@ mongoose.connect('mongodb://localhost/',
 
 //Define model
 var User = require('../database/model_user.js');
-
+var Project = require('../database/model_project.js');
+var Label = require('../database/model_label.js');
 
 //Configure bodyparser
-app.use(bodyparser.urlencoded({extended: true}));
-app.use(bodyparser.json());
+app.use(bodyparser.urlencoded({
+	limit: '500mb',
+	extended: false,
+	parameterLimit: 1000000}));
 
+app.use(bodyparser.json({
+	limit: '500mb'}));
+
+app.use(express.static(__dirname+ '/../../project'));
 
 //Define router
-var router = require('../routers/router_user.js');
-app.use('/user', router);
-
+var user = require('../routers/router_user.js');
+app.use('/user', user);
+var project = require('../routers/router_project.js');
+app.use('/project', project);
+var board = require('../routers/router_board.js');
+app.use('/board', board);
+var label = require('../routers/router_labeling.js');
+app.use('/label', label);
+var shop = require('../routers/router_shop.js');
+app.use('/shop', shop);
 
 
 //Run server
 var server = app.listen(8080, function() {
 	console.log('Server: Server is running......');
 });
+
