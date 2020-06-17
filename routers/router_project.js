@@ -33,13 +33,13 @@ var upload = multer({ storage: storage });
 //Get project image file(zip) from user and save it
 routers.post('/upload', upload.single('project'), function(request, response) {
 	if (!fs.existsSync('project/' + request.file.filename)) {
-		console.log('project/upload: Failed(result: 0)\t' + 'None of file');
+		console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/upload: Failed(result: 0)\t' + 'None of file');
 		response.json({message: "파일 업로드에 실패했습니다. 다시 파일을 첨부해주세요", result: 0});
 		return;
 	}
 	else {
-		console.log('project/upload: Completed(result: 1)');
-		console.log(request.file);
+		console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/upload: Completed(result: 1)');
+		console.log('file: project/' + request.file.filename);
         response.json({result: 1});
 	}
 });
@@ -52,7 +52,7 @@ routers.post('/save', function(request, response) {
 	var decoded;
 
 	if(!token) {
-        console.log('project/save: Failed(result: -1)\t' + 'None of JWT token');
+        console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: -1)\t' + 'None of JWT token');
 		response.json({message: "재로그인이 필요합니다", result: -1});
 		return;
 	}
@@ -60,7 +60,7 @@ routers.post('/save', function(request, response) {
 	try {
 		decoded = jwt.verify(token, SECRETKEY);
 	} catch(error) {
-		console.log('project/save: Failed(result: -1)\t' + 'Wrong JWT token');
+		console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: -1)\t' + 'Wrong JWT token');
 		response.json({message: "재로그인이 필요합니다", result: -1});
 		return;
 	}
@@ -73,13 +73,10 @@ routers.post('/save', function(request, response) {
 	var filename = 'data_' + writer + '_' + request.body.title + '.zip';
 
 	if (!fs.existsSync('project/' + filename)) {
-		console.log('project/save: Failed(result: 0)\t' + 'None of project/' + filename);
+		console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'None of project/' + filename);
 		response.json({message: "라벨링 할 파일이 존재하지 않습니다. 다시 게시글을 작성해주세요", result: 0});
 		return;
 	}
-
-	console.log(decoded);
-    console.log(request.body);
 
     project.Title = request.body.title;
     project.Writer = writer;
@@ -96,8 +93,6 @@ routers.post('/save', function(request, response) {
 	project.ClosingDate = date.add(Number(request.body.closingdate), 'days').format('LLL');
 	project.Active = 1;
 
-	console.log(project);
-
 	//Make directories for project
 	if(!fs.existsSync(filepath)) {
 		fs.mkdirSync(filepath, {recursive: true});
@@ -112,31 +107,31 @@ routers.post('/save', function(request, response) {
 	//Move the zip file to the project directory, unzip the file, and save the data to the database
 	fs.copyFile('/root/workspace/labeler_server/server/project/' + filename, filepath + '/' + filename, function(error) {
 		if(error) {
-			console.log('project/save: Failed(result: 0)\t' + error.name + ': ' + error.message);
-			console.log(error);
+			console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + error.name + ': ' + error.message);
+			response.json({message: '오류가 발생하였습니다', result: 0})
 			return;
 		}
 
 		//Unzip the file
-		shell.exec('unzip ' + '\'' + filepath + '/' + filename + '\'' + ' -d ' + '\'' + filepath + '\'');
-		shell.exec('unzip ' + '\'' + filepath + '/labeling.zip\' -d ' + '\'' + filepath + '/labeling\'');
-		shell.exec('unzip ' + '\'' + filepath + '/contentimg.zip\' -d ' + '\'' + filepath + '/contentimg\'');
-		shell.exec('unzip ' + '\'' + filepath + '/correctimg.zip\' -d ' + '\'' + filepath + '/correctimg\'');
-		shell.exec('unzip ' + '\'' + filepath + '/wrongimg.zip\' -d ' + '\'' + filepath + '/wrongimg\'');
+		shell.exec('unzip -qq ' + '\'' + filepath + '/' + filename + '\'' + ' -d ' + '\'' + filepath + '\'');
+		shell.exec('unzip -qq ' + '\'' + filepath + '/labeling.zip\' -d ' + '\'' + filepath + '/labeling\'');
+		shell.exec('unzip -qq ' + '\'' + filepath + '/contentimg.zip\' -d ' + '\'' + filepath + '/contentimg\'');
+		shell.exec('unzip -qq ' + '\'' + filepath + '/correctimg.zip\' -d ' + '\'' + filepath + '/correctimg\'');
+		shell.exec('unzip -qq ' + '\'' + filepath + '/wrongimg.zip\' -d ' + '\'' + filepath + '/wrongimg\'');
 
 		fs.unlink('/root/workspace/labeler_server/server/project/' + filename, function(error) {
-			console.log('project/save: ' + filename + ' deleted');
+			console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: ' + filename + ' deleted');
 			fs.unlink(filepath + '/labeling.zip', function (error) {
-				console.log('project/save: ' + filename + '/labeling.zip deleted');
+				console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: ' + filename + '/labeling.zip deleted');
 			});
 			fs.unlink(filepath + '/contentimg.zip', function (error) {
-				console.log('project/save: ' + filename + '/contentimg.zip deleted');
+				console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: ' + filename + '/contentimg.zip deleted');
 			});
 			fs.unlink(filepath + '/correctimg.zip', function (error) {
-				console.log('project/save: ' + filename + '/correctimg.zip deleted');
+				console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: ' + filename + '/correctimg.zip deleted');
 			});
 			fs.unlink(filepath + '/wrongimg.zip', function (error) {
-				console.log('project/save: ' + filename + '/wrongimg.zip deleted');
+				console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: ' + filename + '/wrongimg.zip deleted');
 			});
 		});
 		
@@ -148,25 +143,25 @@ routers.post('/save', function(request, response) {
 			if(decoded.user.Point >= project.TotalProcess * request.body.point) {
 				project.save(function(error) {
 					if(error) {
-						console.log('project/save: Failed(result: 0)\t' + 'Image collection -' + error.name + ': ' + error.message);
+						console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Image collection -' + error.name + ': ' + error.message);
 						response.json({message: '오류가 발생했습니다', result: 0});
 						return;
 					}
 					User.updateOne({AccountID: decoded.user.AccountID}, {$push: {MyProject: project.Title}, $inc: {Point: -project.TotalProcess * request.body.point}}, function(error, user_u) {
 						if(error) {
-							console.log('project/save: Failed(result: 0)\t' + 'Image collection -' + error.name + ': ' + error.message);
+							console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Image collection -' + error.name + ': ' + error.message);
 							response.json({message: '오류가 발생했습니다', result: 0});
 							return;
 						}
-						console.log('project/save: Completed(result: 1)');
-						console.log(project);
+						console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Completed(result: 1)');
+						console.log('project: ' + project.Title + ', ' + project.Writer + ', ' + project.Type);
 						response.json({result: 1});
 						return;
 					});
 				});
 			}
 			else {
-				console.log('project/save: Failed(result: 0)\t' + 'Lack of user point: ' + decoded.user.Point);
+				console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Lack of user point: ' + decoded.user.Point);
 				response.json({message: '포인트가 부족합니다', result: 0});
 				return;
 			}
@@ -188,7 +183,7 @@ routers.post('/save', function(request, response) {
 
 			fs.readdir(filepath + '/labeling', function(error, files) {
 				if(error) {
-					console.log('project/save: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 					response.json({message: '오류가 발생했습니다', result: 0});
 					return;
 				}
@@ -197,24 +192,24 @@ routers.post('/save', function(request, response) {
 				if(decoded.user.Point >= project.TotalProcess * request.body.point) {
 					project.save(function(error) {
 						if(error) {
-							console.log('project/save: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
-							console.log(error.name + ': ' + error.message);
+							console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 							response.json({message: '오류가 발생했습니다', result: 0});
 							return;
 						}
 						img.save(function(error) {
 							if(error) {
-								console.log('project/save: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+								console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 								response.json({message: '오류가 발생했습니다', result: 0});
 								return;
 							}
 							User.updateOne({AccountID: decoded.user.AccountID}, {$push: {MyProject: project.Title}, $inc: {Point: -project.TotalProcess * request.body.point}}, function(error, user_u) {
 								if(error) {
-									console.log('project/save: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+									console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 									response.json({message: '오류가 발생했습니다', result: 0});
 									return;
 								}
-								console.log('project/save: Completed(result: 1)');
+								console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Completed(result: 1)');
+								console.log('project: ' + project.Title + ', ' + project.Writer + ', ' + project.Type);
 								response.json({result: 1});
 								return;
 							});
@@ -222,7 +217,7 @@ routers.post('/save', function(request, response) {
 					});
 				}
 				else {
-					console.log('project/save: Failed(result: 0)\t' + 'Lack of user point: ' + decoded.user.Point);
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Lack of user point: ' + decoded.user.Point);
 					response.json({message: '포인트가 부족합니다', result: 0});
 					return;
 				}
@@ -242,7 +237,7 @@ routers.post('/save', function(request, response) {
 
 			fs.readdir(filepath + '/labeling', function(error, files) {
 				if(error) {
-					console.log('project/save: Failed(result: 0)\t' + 'Bounding box -' + error.name + ': ' + error.message);
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Bounding box -' + error.name + ': ' + error.message);
 					response.json({message: '오류가 발생했습니다', result: 0});
 					return;
 				}
@@ -251,23 +246,28 @@ routers.post('/save', function(request, response) {
 				if(decoded.user.Point >= project.TotalProcess * request.body.point) {
 					project.save(function(error) {
 						if(error) {
-							console.log('project/save: Failed(result: 0)\t' + 'Bounding box -' + error.name + ': ' + error.message);
+							console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Bounding box -' + error.name + ': ' + error.message);
 							response.json({message: '오류가 발생했습니다', result: 0});
 							return;
 						}
 						img.save(function(error) {
 							if(error) {
-								console.log('project/save: Failed(result: 0)\t' + 'Bounding box -' + error.name + ': ' + error.message);
+								console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Bounding box -' + error.name + ': ' + error.message);
 								response.json({message: '오류가 발생했습니다', result: 0});
 								return;
 							}
 							User.updateOne({AccountID: decoded.user.AccountID}, {$push: {MyProject: project.Title}, $inc: {Point: -project.TotalProcess * request.body.point}}, function(error, user_u) {
 								if(error) {
-									console.log('project/save: Failed(result: 0)\t' + 'Bounding box -' + error.name + ': ' + error.message);
+									console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Bounding box -' + error.name + ': ' + error.message);
 									response.json({message: '오류가 발생했습니다', result: 0});
 									return;
 								}
-								console.log('project/save: Completed(result: 1)');
+								img.Objects.forEach(obj => {
+									fs.appendFileSync(filepath + '/result/ObjectList.txt', img.Objects.indexOf(obj) + ' ' + obj + '\n');
+								});
+
+								console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Completed(result: 1)');
+								console.log('project: ' + project.Title + ', ' + project.Writer + ', ' + project.Type, + ', ' + Number(img.Format) + '(format)');
 								response.json({result: 1});
 								return;
 							});
@@ -275,7 +275,7 @@ routers.post('/save', function(request, response) {
 					});
 				}
 				else {
-					console.log('project/save: Failed(result: 0)\t' + 'Lack of user point: ' + decoded.user.Point);
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Lack of user point: ' + decoded.user.Point);
 					response.json({message: '포인트가 부족합니다', result: 0});
 					return;
 				}
@@ -294,7 +294,7 @@ routers.post('/save', function(request, response) {
 			
 			fs.readFile(filepath + '/labeling/data.csv', 'utf-8', function(error, data) {
 				if(error) {
-					console.log('project/save: Failed(result: 0)\t' + 'Text labeling -' + error.name + ': ' + error.message);
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Text labeling -' + error.name + ': ' + error.message);
 					response.json({message: '오류가 발생하였습니다', result: 0});
 					return;
 				}
@@ -304,23 +304,25 @@ routers.post('/save', function(request, response) {
 				if(decoded.user.Point >= project.TotalProcess * request.body.point) {
 					project.save(function(error) {
 						if(error) {
-							console.log('project/save: Failed(result: 0)\t' + 'Text labeling -' + error.name + ': ' + error.message);
+							console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Text labeling -' + error.name + ': ' + error.message);
 							response.json({message: '오류가 발생했습니다', result: 0});
 							return;
 						}
 						text.save(function(error) {
 							if(error) {
-								console.log('project/save: Failed(result: 0)\t' + 'Text labeling -' + error.name + ': ' + error.message);
+								console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Text labeling -' + error.name + ': ' + error.message);
 								response.json({message: '오류가 발생하였습니다', result: 0});
 								return;
 							}
 							User.updateOne({AccountID: decoded.user.AccountID}, {$push: {MyProject: project.Title}, $inc: {Point: -project.TotalProcess * request.body.point}}, function(error, user_u) {
 								if(error) {
-									console.log('project/save: Failed(result: 0)\t' + 'Text labeling -' + error.name + ': ' + error.message);
+									console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Text labeling -' + error.name + ': ' + error.message);
 									response.json({message: '오류가 발생했습니다', result: 0});
 									return;
 								}
-								console.log('project/save: Completed(result: 1)');
+
+								console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Completed(result: 1)');
+								console.log('project: ' + project.Title + ', ' + project.Writer + ', ' + project.Type);
 								response.json({result: 1});
 								return;
 							});
@@ -328,7 +330,7 @@ routers.post('/save', function(request, response) {
 					});
 				}
 				else {
-					console.log('project/save: Failed(result: 0)\t' + 'Lack of user point: ' + decoded.user.Point);
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/save: Failed(result: 0)\t' + 'Lack of user point: ' + decoded.user.Point);
 					response.json({message: '포인트가 부족합니다', result: 0});
 					return;
 				}
@@ -345,7 +347,7 @@ routers.post('/download', function(request, response) {
 	var decoded;
 
 	if(!token) {
-		console.log('project/download: Failed(result: -1)\t' + 'None of JWT token');
+		console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/download: Failed(result: -1)\t' + 'None of JWT token');
 		response.json({message: "재로그인이 필요합니다", result: -1});
 		return;
 	}
@@ -353,7 +355,7 @@ routers.post('/download', function(request, response) {
 	try {
 		decoded = jwt.verify(token, SECRETKEY);
 	} catch(error) {
-		console.log('project/download: Failed(result: -1)\t' + 'Wrong JWT token');
+		console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/download: Failed(result: -1)\t' + 'Wrong JWT token');
 		response.json({message: "재로그인이 필요합니다", result: -1});
 		return;
 	}
@@ -361,8 +363,13 @@ routers.post('/download', function(request, response) {
 	//Check writer's accountid and accountpw
 	Project.findOne({Title: request.body.title, Writer: decoded.user.AccountID}, function(error, project) {
 		if(error) {
-			console.log('project/download: Failed(result: 0)\t' + error.name + ': ' + error.message);
+			console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/download: Failed(result: 0)\t' + error.name + ': ' + error.message);
 			response.json({message: "오류가 발생하였습니다", result: 0});
+			return;
+		}
+		if(project == null) {
+			console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/download: Failed(result: 0)\t' + 'Expired project');
+			response.json({message: "만료된 프로젝트 입니다", result: 0});
 			return;
 		}
 		if(project.Active == 0) {
@@ -376,32 +383,39 @@ routers.post('/download', function(request, response) {
 				
 			//Can download result file up to 3 days after the deadline(closingdate)
 			if(date.diff(moment(project.ClosingDate), 'days') < 3) {
-				zip.writeZip(dir + '/result/' + file, function(error) {
-					if(error) {
-						console.log('project/download: Failed(result: 0)\t' + error.name + ': ' + error.message);
-						response.json({message: '파일 생성에 실패하였습니다', result: 0});
-						return;
-					}
-					console.log('project/download: Completed(download)');
-					//response.redirect('server IP address' + project.Writer + '/'+ project.Title + '/result/' + file);
+				if(fs.existsSync(dir + '/result/' + file)) {
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/download: Completed(download)');
+					response.redirect('http://133.186.217.234:8080/' + project.Writer + '/'+ project.Title + '/result/' + file);
 					return;
-				});
+				}
+				else {
+						zip.writeZip(dir + '/result/' + file, function(error) {
+						if(error) {
+							console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/download: Failed(result: 0)\t' + error.name + ': ' + error.message);
+							response.json({message: '파일 생성에 실패하였습니다', result: 0});
+							return;
+						}
+						console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/download: Completed(download)');
+						response.redirect('http://133.186.217.234:8080/' + project.Writer + '/'+ project.Title + '/result/' + file);
+						return;
+					});
+				}
 			}
 			else {
 				Project.remove({Title: project.Title, Writer: project.Writer}, function(error, output) {
 					if(error) {
-						console.log('project/download: Failed(result: 0)\t' + error.name + ': ' + error.message);
+						console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/download: Failed(result: 0)\t' + error.name + ': ' + error.message);
 						response.json({message: '오류가 발생하였습니다', result: 0});
 						return;
 					}
 					if(project.Type == 1 || project.Type == 2) {
 						Label.Label_Img.remove({Title: project.Title, Writer: project.Writer}, function(error, output) {
 							if(error) {
-								console.log('project/download: Failed(result: 0)\t' + error.name + ': ' + error.message);
+								console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/download: Failed(result: 0)\t' + error.name + ': ' + error.message);
 								response.json({message: '오류가 발생하였습니다', result: 0});
 								return;
 							}
-							console.log('project/download: Failed(result: 2)\t' + 'Download duration over');
+							console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/download: Failed(result: 2)\t' + 'Download duration over');
 							response.json({message: '파일 다운로드 기간이 지났습니다', result: 2});
 							return;
 						});
@@ -409,7 +423,7 @@ routers.post('/download', function(request, response) {
 					else if(project.Type == 3) {
 						Label.Label_Text.remove({Title: project.Title, Writer: project.Writer}, function(error, output) {
 							if(error) {
-								console.log('project/download: Failed(result: 0)\t' + error.name + ': ' + error.message);
+								console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tproject/download: Failed(result: 0)\t' + error.name + ': ' + error.message);
 								response.json({message: '오류가 발생하였습니다', result: 0});
 								return;
 							}

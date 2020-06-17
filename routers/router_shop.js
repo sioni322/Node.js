@@ -3,6 +3,7 @@
 var express = require('express');
 var routers = express.Router();
 var jwt = require('jsonwebtoken');
+var moment = require('moment');
 
 var User = require('../database/model_user.js');
 
@@ -16,7 +17,7 @@ routers.use('/load', function(request, response) {
     var decoded;
 
     if(!token) {
-        console.log('shop/load: Failed(result: -1)\t' + 'None of JWT token');
+        console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tshop/load: Failed(result: -1)\t' + 'None of JWT token');
         response.json({message: "재로그인이 필요합니다", result: -1});
         return;
     }
@@ -24,7 +25,7 @@ routers.use('/load', function(request, response) {
     try {
         decoded = jwt.verify(token, SECRETKEY);
     } catch(error) {
-        console.log('shop/load: Failed(result: -1)\t' + 'Wrong JWT token');
+        console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tshop/load: Failed(result: -1)\t' + 'Wrong JWT token');
         response.json({message: "재로그인이 필요합니다", result: -1});
         return;
     }
@@ -32,7 +33,7 @@ routers.use('/load', function(request, response) {
 	//Find user with JWT token information and return user information
 	User.findOne({AccountID: decoded.user.AccountID, AccountPW: decoded.user.AccountPW}, function(error, user) {
 		if(error) {
-			console.log('shop/load: Failed(result: 0)\t' + error.name + ': ' + error.message);
+			console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tshop/load: Failed(result: 0)\t' + error.name + ': ' + error.message);
 			response.json({message: '오류가 발생하였습니다', result: 0});
 			return;
 		}
@@ -40,7 +41,7 @@ routers.use('/load', function(request, response) {
 		res['point'] = user.Point;
 		res['result'] = 1;
 
-        console.log('shop/load: Completed(result: 1)');
+        console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tshop/load: Completed(result: 1)');
 		response.json(res);
 		return;
 	});

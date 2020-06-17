@@ -33,23 +33,23 @@ var upload = multer({ storage: storage });
 routers.post('/start', function(request, response) {
 	Project.findOne({Title: request.body.title, Writer: request.body.writer}, function(error, project) {
 		if(error) {
-			console.log('label/start: Failed(result: 0)\t' + error.name + ': ' + error.message);
+			console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + error.name + ': ' + error.message);
 			response.json({message: '해당 프로젝트가 존재하지 않습니다. 다시 시도해 주세요', result: 0});
 			return;
 		}
 		else if(project.Active == 0) {
-			console.log('label/start: Failed(result: 0)\t' + 'Project inactivated');
+			console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Project inactivated');
 			response.json({message: '만료된 프로젝트입니다', result: 0});
 			return;
 		}
 		else if(project.CurrentProcess >= project.TotalProcess) {
 			Project.updateOne({Title: project.Title, Writer: project.Writer}, {$set: {Active: 0}}, function(error, project_u) {
 				if(error) {
-					console.log('label/start: Failed(result: 0)\t' + error.name + ': ' + error.message);
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + error.name + ': ' + error.message);
 					response.json({message: '오류가 발생하였습니다', result: 0});
 					return;
 				}
-				console.log('label/start: Failed(result: 0)\t' + 'End of labeling');
+				console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'End of labeling');
 				response.json({message: '모든 파일을 불러왔습니다', result: 2});
 				return;
 			});
@@ -66,7 +66,7 @@ routers.post('/start', function(request, response) {
 
 			//Image collection
 			if(project.Type == 0) {
-				console.log('label/start: Completed(result: 1)');
+				console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Completed(result: 1)');
 				response.json({result: 1});
 				return;
 			}
@@ -78,7 +78,7 @@ routers.post('/start', function(request, response) {
 						//Read the labeling directory and find image files
 						fs.readdir(dir, {withFileTypes: true}, function(error, files) {
 							if(error) {
-								console.log('label/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+								console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 								response.json({message: '오류가 발생했습니다. 다시 시도해 주세요', result: 0});
 								return;
 							}
@@ -86,7 +86,7 @@ routers.post('/start', function(request, response) {
 							if(img.Index >= img.Objects.length) {
 								Project.updateOne({Title: project.Title, Writer: project.Writer}, {$set: {Active: 0}}, function(error, project_u) {
 									if(error) {
-										console.log('label/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+										console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 										response.json({message: '오류가 발생하였습니다', result: 0});
 										return;
 									}
@@ -97,7 +97,7 @@ routers.post('/start', function(request, response) {
 									}
 									fs.readdir(dir + '/../temp', {withFileTypes: true}, function(error, files_temp) {
 										if(error) {
-											console.log('label/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+											console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 											response.json({message: '오류가 발생하였습니다', result: 0});
 											return;
 										}
@@ -107,7 +107,7 @@ routers.post('/start', function(request, response) {
 											});
 										}
 									});
-									console.log('label/start: Completed(result: 2)\t' + 'End of labeling');
+									console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Completed(result: 2)\t' + 'End of labeling');
 									response.json({message: '라벨링이 완료되었습니다', result: 2});
 									return;
 								});
@@ -130,8 +130,6 @@ routers.post('/start', function(request, response) {
 					
 									var filenum = 4-fnum;
 
-									console.log(files.length);
-									console.log(filenum);
 									res['files'] = res_files;
 									res['result'] = 1;
 
@@ -145,13 +143,13 @@ routers.post('/start', function(request, response) {
 										if(files.length - filenum == 0) {
 											Label.Label_Img.updateOne({Title: img.Title, Writer: img.Writer}, {$set: {Count: 0, Index: img.Index+1}}, function(error, img_u) {
 												if(error) {
-													console.log('label/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+													console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 													response.json({message: '오류가 발생하였습니다', result: 0});
 													return;
 												}
 												res['objects'] = img.Objects[img.Index];
 			
-												console.log(res);
+												console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Completed(result: 1)\t' + 'Labeling data sended');
 												response.json(res);
 												return;
 											});
@@ -159,13 +157,13 @@ routers.post('/start', function(request, response) {
 										else {
 											Label.Label_Img.updateOne({Title: img.Title, Writer: img.Writer}, {$set: {Count: files.length-filenum}}, function(error, img_u) {
 												if(error) {
-													console.log('label/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+													console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 													response.json({message: '오류가 발생하였습니다', result: 0});
 													return;
 												}
 												res['objects'] = img.Objects[img.Index];
 			
-												console.log(res);
+												console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Completed(result: 1)\t' + 'Labeling data sended');
 												response.json(res);
 												return;
 											});
@@ -175,13 +173,13 @@ routers.post('/start', function(request, response) {
 									else if(img.Count-filenum == 0) {
 										Label.Label_Img.updateOne({Title: img.Title, Writer: img.Writer}, {$set: {Count: 0, Index: img.Index+1}}, function(error, img_u) {
 											if(error) {
-												console.log('label/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+												console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 												response.json({message: '오류가 발생하였습니다', result: 0});
 												return;
 											}
 											res['objects'] = img.Objects[img.Index];
 											
-											console.log(res);
+											console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Completed(result: 1)\t' + 'Labeling data sended');
 											response.json(res);
 											return;
 										});
@@ -190,13 +188,13 @@ routers.post('/start', function(request, response) {
 									else {
 										Label.Label_Img.updateOne({Title: img.Title, Writer: img.Writer}, {$inc: {Count: -filenum}}, function(error, img_u) {
 											if(error) {
-												console.log('label/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+												console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 												response.json({message: '오류가 발생하였습니다', result: 0});
 												return;
 											}
 											res['objects'] = img.Objects[img.Index];
 	
-											console.log(res);
+											console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Completed(result: 1)\t' + 'Labeling data sended');
 											response.json(res);
 											return;
 										});
@@ -211,7 +209,7 @@ routers.post('/start', function(request, response) {
 
 						fs.readdir(tempdir, {withFileTypes: true}, function(error, files) {
 							if(error) {
-								console.log('label/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+								console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 								response.json({message: '오류가 발생했습니다. 다시 시도해 주세요', result: 0});
 								return;
 							}
@@ -219,7 +217,7 @@ routers.post('/start', function(request, response) {
 							if(img.Index >= img.Objects.length) {
 								Project.updateOne({Title: project.Title, Writer: project.Writer}, {$set: {Active: 0}}, function(error, project_u) {
 									if(error) {
-										console.log('label/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+										console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 										response.json({message: '오류가 발생하였습니다', result: 0});
 										return;
 									}
@@ -230,7 +228,7 @@ routers.post('/start', function(request, response) {
 									}
 									fs.readdir(dir, {withFileTypes: true}, function(error, files_l) {
 										if(error) {
-											console.log('label/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+											console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 											response.json({message: '오류가 발생하였습니다', result: 0});
 											return;
 										}
@@ -240,7 +238,7 @@ routers.post('/start', function(request, response) {
 											});
 										}
 									});
-									console.log('label/start: Completed(result: 2)\t' + 'End of labeling');
+									console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Completed(result: 2)\t' + 'End of labeling');
 									response.json({message: '라벨링이 완료되었습니다', result: 2});
 									return;
 								});
@@ -277,14 +275,13 @@ routers.post('/start', function(request, response) {
 										if(files.length - filenum == 0) {
 											Label.Label_Img.updateOne({Title: img.Title, Writer: img.Writer}, {$set: {Count: 0, Index: img.Index+1}}, function(error, img_u) {
 												if(error) {
-													console.log('label/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+													console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 													response.json({message: '오류가 발생하였습니다', result: 0});
 													return;
 												}
 												res['objects'] = img.Objects[img.Index];
 			
-												console.log('label/start: Completed(result: 1)\t' + 'Labeling data sended');
-												console.log(res);
+												console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Completed(result: 1)\t' + 'Labeling data sended');
 												response.json(res);
 												return;
 											});
@@ -292,14 +289,13 @@ routers.post('/start', function(request, response) {
 										else {
 											Label.Label_Img.updateOne({Title: img.Title, Writer: img.Writer}, {$set: {Count: files.length-filenum}}, function(error, img_u) {
 												if(error) {
-													console.log('label/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+													console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 													response.json({message: '오류가 발생하였습니다', result: 0});
 													return;
 												}
 												res['objects'] = img.Objects[img.Index];
 			
-												console.log('label/start: Completed(result: 1)\t' + 'Labeling data sended');
-												console.log(res);
+												console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Completed(result: 1)\t' + 'Labeling data sended');
 												response.json(res);
 												return;
 											});
@@ -309,14 +305,13 @@ routers.post('/start', function(request, response) {
 									else if(img.Count-filenum == 0) {
 										Label.Label_Img.updateOne({Title: img.Title, Writer: img.Writer}, {$set: {Count: 0, Index: img.Index+1}}, function(error, img_u) {
 											if(error) {
-												console.log('label/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+												console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 												response.json({message: '오류가 발생하였습니다', result: 0});
 												return;
 											}
 											res['objects'] = img.Objects[img.Index];
 
-											console.log('label/start: Completed(result: 1)\t' + 'Labeling data sended');
-											console.log(res);
+											console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Completed(result: 1)\t' + 'Labeling data sended');
 											response.json(res);
 											return;
 										});
@@ -325,14 +320,13 @@ routers.post('/start', function(request, response) {
 									else {
 										Label.Label_Img.updateOne({Title: img.Title, Writer: img.Writer}, {$inc: {Count: -filenum}}, function(error, img_u) {
 											if(error) {
-												console.log('label/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
+												console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Image classification -' + error.name + ': ' + error.message);
 												response.json({message: '오류가 발생하였습니다', result: 0});
 												return;
 											}
 											res['objects'] = img.Objects[img.Index];
 
-											console.log('label/start: Completed(result: 1)\t' + 'Labeling data sended');
-											console.log(res);
+											console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Completed(result: 1)\t' + 'Labeling data sended');
 											response.json(res);
 											return;
 										});
@@ -349,7 +343,7 @@ routers.post('/start', function(request, response) {
 				//Read the directory and find image files
 				fs.readdir(dir, {withFileTypes: true}, function(error, files) {
 					if(error) {
-						console.log('label/start: Failed(result: 0)\t' + 'Bounding box -' + error.name + ': ' + error.message);
+						console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Bounding box -' + error.name + ': ' + error.message);
 						response.json({message: '오류가 발생했습니다. 다시 시도해 주세요', result: 0});
 						return;
 					}
@@ -370,7 +364,7 @@ routers.post('/start', function(request, response) {
 						});
 						Label.Label_Img.findOne({Writer: project.Writer, Title: project.Title}, function(error, label_img) {
 							if(error) {
-								console.log('label/start: Failed(result: 0)\t' + 'Bounding box -' + error.name + ': ' + error.message);
+								console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Bounding box -' + error.name + ': ' + error.message);
 								response.json({message: '오류가 발생하였습니다', result: 0});
 								return;
 							}
@@ -388,7 +382,7 @@ routers.post('/start', function(request, response) {
 								fs.renameSync(dir + '/' + file, dir + '/../temp/' + file);
 							});
 
-							console.log('label/start: Completed(result: 1)\t' + 'Labeling data sended');
+							console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Completed(result: 1)\t' + 'Labeling data sended');
 							response.json(res);
 							return;
 						});
@@ -397,11 +391,11 @@ routers.post('/start', function(request, response) {
 					else {
 						Project.updateOne({Title: project.Title, Writer: project.Writer}, {$set: {Active: 0}}, function(error, project_u) {
 							if(error) {
-								console.log('label/start: Failed(result: 0)\t' + 'Bounding box -' + error.name + ': ' + error.message);
+								console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Bounding box -' + error.name + ': ' + error.message);
 								response.json({message: '오류가 발생하였습니다', result: 0});
 								return;
 							}
-							console.log('label/start: Completed(result: 2)\t' + 'End of labeling');
+							console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Completed(result: 2)\t' + 'End of labeling');
 							response.json({message: '모든 파일을 불러왔습니다', result: 2});
 							return;
 						});
@@ -414,14 +408,14 @@ routers.post('/start', function(request, response) {
 				//Read the csv file and response labeling data
 				Label.Label_Text.findOne({Title: project.Title, Writer: project.Writer}, function(error, text) {
 					if(error) {
-						console.log('label/start: Failed(result: 0)\t' + 'Text labeling -' + error.name + ': ' + error.message);
+						console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Text labeling -' + error.name + ': ' + error.message);
 						response.json({message: '라벨링 데이터가 존재하지 않습니다', result: 0});
 						return;
 					}
 
 					fs.readFile(dir + '/data.csv', 'utf-8', function(error, data) {
 						if(error) {
-							console.log('label/start: Failed(result: 0)\t' + 'Text labeling -' + error.name + ': ' + error.message);
+							console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Text labeling -' + error.name + ': ' + error.message);
 							response.json({message: '오류가 발생하였습니다', result: 0});
 							return;
 						}
@@ -429,7 +423,7 @@ routers.post('/start', function(request, response) {
 
 						Label.Label_Text.updateOne({Title: text.Title, Writer: text.Writer}, {$inc : {Index: 1}}, function(error, text_u) {
 							if(error) {
-								console.log('label/start: Failed(result: 0)\t' + 'Text labeling -' + error.name + ': ' + error.message);
+								console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Failed(result: 0)\t' + 'Text labeling -' + error.name + ': ' + error.message);
 								response.json({message: '오류가 발생하였습니다', result: 0});
 								return;
 							}
@@ -439,8 +433,7 @@ routers.post('/start', function(request, response) {
 							res['objects'] = text.Objects;
 							res['result'] = 1;
 
-							console.log('label/start: Completed(result: 1)\t' + 'Labeling data sended');
-							console.log(res);								
+							console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/start: Completed(result: 1)\t' + 'Labeling data sended');
 							response.json(res);
 							return;
 						});
@@ -460,7 +453,7 @@ routers.post('/end/0', upload.single('label'), function(request, response) {
 	var decoded;
 
 	if(!token) {
-		console.log('label/end/0: Failed(result: -1)\t' + 'None of JWT token');
+		console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/0: Failed(result: -1)\t' + 'None of JWT token');
 		response.json({message: '재로그인이 필요합니다', result: -1});
 		return;
 	}
@@ -468,47 +461,47 @@ routers.post('/end/0', upload.single('label'), function(request, response) {
 	try {
 		decoded = jwt.verify(token, SECRETKEY);
 	} catch(error) {
-		console.log('label/end/0: Failed(result: -1)\t' + 'Wrong JWT token');
+		console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/0: Failed(result: -1)\t' + 'Wrong JWT token');
 		response.json({message: '재로그인이 필요합니다', result: -1});
 		return;
 	}
 
 	Project.findOne({Title: request.body.title, Writer: request.body.writer}, function(error, project) {
 		if(error) {
-			console.log('label/end/0: Failed(result: 0)\t' + error.name + ': ' + error.message);
+			console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/0: Failed(result: 0)\t' + error.name + ': ' + error.message);
 			response.json({message: '오류가 발생하였습니다', result: 0});
 			return;
 		}
 		var dir = '/root/workspace/project/' + request.body.writer + '/' + request.body.title;
 
 		//Extract zip files to project directory
-		shell.exec('unzip ' + '\'project/' + request.file.filename + '\' -d \'' + dir + '/temp/\'');
+		shell.exec('unzip -qq ' + '\'project/' + request.file.filename + '\' -d \'' + dir + '/temp/\'');
 		shell.exec('rm ' + '\'project/' + request.file.filename + '\'');
 
 		fs.readdir(dir + '/temp/', function(error, files) {
 			if(error) {
-				console.log('label/end/0: Failed(result: 0)\t' + error.name + ': ' + error.message);
+				console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/0: Failed(result: 0)\t' + error.name + ': ' + error.message);
 				response.json({message: '오류가 발생하였습니다', result: 0});
 				return;
 			}
 			files.forEach(files_rename => {
-				fs.renameSync(dir + '/temp/' + files_rename, dir + '/result/' + moment().format('YYYYMMDDhmmssSSS') + files_rename);
+				fs.renameSync(dir + '/temp/' + files_rename, dir + '/result/' + moment().format('YYYYMMDDhhmmssSSS') + files_rename);
 			});
 
 			//Update data
 			Project.updateOne({Title: project.Title, Writer: project.Writer}, {$inc: {CurrentProcess: request.body.filenum}}, function(error, project_u) {
 				if(error) {
-					console.log('label/end/0: Failed(result: 0)\t' + error.name + ': ' + error.message);
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/0: Failed(result: 0)\t' + error.name + ': ' + error.message);
 					response.json({message: '오류가 발생하였습니다', result: 0});
 					return;
 				}
 				User.updateOne({AccountID: decoded.user.AccountID, AccountPW: decoded.user.AccountPW}, {$inc: {Point: request.body.filenum * project.Point}, $addToSet: {JoinedProject: project.Title}}, function(error, user_u) {
 					if(error) {
-						console.log('label/end/0: Failed(result: 0)\t' + error.name + ': ' + error.message);
+						console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/0: Failed(result: 0)\t' + error.name + ': ' + error.message);
 						response.json({message: '오류가 발생하였습니다', result: 0});
 						return;
 					}
-					console.log('label/end/0: Completed(result: 1)\t');
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/0: Completed(result: 1)\t');
 					response.json({result: 1});
 					return;
 				});
@@ -525,7 +518,7 @@ routers.post('/end/1', function(request, response) {
 	var decoded;
 
 	if(!token) {
-		console.log('label/end/1: Failed(result: -1)\t' + 'None of JWT token');
+		console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/1: Failed(result: -1)\t' + 'None of JWT token');
 		response.json({message: '재로그인이 필요합니다', result: -1});
 		return;
 	}
@@ -533,20 +526,20 @@ routers.post('/end/1', function(request, response) {
 	try {
 		decoded = jwt.verify(token, SECRETKEY);
 	} catch(error) {
-		console.log('label/end/1: Failed(result: -1)\t' + 'Wrong JWT token');
+		console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/1: Failed(result: -1)\t' + 'Wrong JWT token');
 		response.json({message: '재로그인이 필요합니다', result: -1});
 		return;
 	}
 	
 	if(request.body.name === []) {
-		console.log('label/end/1: Completed(result: 1)\t');
+		console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/1: Completed(result: 1)\t');
 		response.json({result: 1});
 		return;
 	}
 
 	Project.findOne({Title: request.body.title, Writer: request.body.writer}, function(error, project) {
 		if(error) {
-			console.log('label/end/1: Failed(result: 0)\t' + error.name + ': ' + error.message);
+			console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/1: Failed(result: 0)\t' + error.name + ': ' + error.message);
 			response.json({message: '오류가 발생하였습니다', result: 0});
 			return;
 		}
@@ -554,7 +547,7 @@ routers.post('/end/1', function(request, response) {
 
 		Label.Label_Img.findOne({Title: project.Title, Writer: project.Writer}, function(error, label_img) {
 			if(error) {
-				console.log('label/end/1: Failed(result: 0)\t' + error.name + ': ' + error.message);
+				console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/1: Failed(result: 0)\t' + error.name + ': ' + error.message);
 				response.json({message: '오류가 발생하였습니다', result: 0});
 				return;
 			}
@@ -588,18 +581,18 @@ routers.post('/end/1', function(request, response) {
 			//Update data
 			Project.updateOne({Title: project.Title, Writer: project.Writer}, {$inc: {CurrentProcess: request.body.name.length}}, function(error, project_u) {
 				if(error) {
-					console.log('label/end/1: Failed(result: 0)\t' + error.name + ': ' + error.message);
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/1: Failed(result: 0)\t' + error.name + ': ' + error.message);
 					response.json({message: '오류가 발생하였습니다', result: 0});
 					return;
 				}
 				User.updateOne({AccountID: decoded.user.AccountID, AccountPW: decoded.user.AccountPW}, {$inc: {Point: request.body.name.length * project.Point}, $addToSet: {JoinedProject: project.Title}}, function(error, user_u) {
 					if(error) {
-						console.log('label/end/1: Failed(result: 0)\t' + error.name + ': ' + error.message);
+						console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/1: Failed(result: 0)\t' + error.name + ': ' + error.message);
 						response.json({message: '오류가 발생하였습니다', result: 0});
 						return;
 					}
 
-					console.log('label/end/1: Completed(result: 1)');
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/1: Completed(result: 1)');
 					response.json({result: 1});
 					return;
 				});
@@ -615,7 +608,7 @@ routers.post('/end/2', function(request, response) {
 	var decoded;
 
 	if(!token) {
-		console.log('label/end/2: Failed(result: -1)\t' + 'None of JWT token');
+		console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/2: Failed(result: -1)\t' + 'None of JWT token');
 		response.json({message: '재로그인이 필요합니다', result: -1});
 		return;
 	}
@@ -623,7 +616,7 @@ routers.post('/end/2', function(request, response) {
 	try {
 		decoded = jwt.verify(token, SECRETKEY);
 	} catch(error) {
-		console.log('label/end/2: Failed(result: -1)\t' + 'Wrong JWT token');
+		console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/2: Failed(result: -1)\t' + 'Wrong JWT token');
 		response.json({message: '재로그인이 필요합니다', result: -1});
 		return;
 	}
@@ -631,7 +624,7 @@ routers.post('/end/2', function(request, response) {
 	//Find project and save the labeling data
 	Project.findOne({Title: request.body.title, Writer: request.body.writer}, function(error, project) {
 		if(error) {
-			console.log('label/end/2: Failed(result: 0)\t' + error.name + ': ' + error.message);
+			console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/2: Failed(result: 0)\t' + error.name + ': ' + error.message);
 			response.json({message: '오류가 발생하였습니다', result: 0});
 			return;
 		}
@@ -641,7 +634,7 @@ routers.post('/end/2', function(request, response) {
 		//Write labeling data
 		fs.writeFile(dir + '/result/' + file + '.txt', request.body.content, function(error) {
 			if(error) {
-				console.log('label/end/2: Failed(result: 0)\t' + error.name + ': ' + error.message);
+				console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/2: Failed(result: 0)\t' + error.name + ': ' + error.message);
 				response.json({message: '오류가 발생하였습니다', result: 0});
 				return;
 			}
@@ -650,18 +643,18 @@ routers.post('/end/2', function(request, response) {
 			//Update data
 			Project.updateOne({Title: project.Title, Writer: project.Writer}, {$inc : {CurrentProcess: 1}}, function(error, project_u) {
 				if(error) {
-					console.log('label/end/2: Failed(result: 0)\t' + error.name + ': ' + error.message);
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/2: Failed(result: 0)\t' + error.name + ': ' + error.message);
 					response.json({message: '오류가 발생하였습니다', result: 0});
 					return;
 				}
 				User.updateOne({AccountID: decoded.user.AccountID, AccountPW: decoded.user.AccountPW}, {$inc: {Point: project.Point}, $addToSet: {JoinedProject: project.Title}}, function(error, user_u) {
 					if(error) {
-						console.log('label/end/2: Failed(result: 0)\t' + error.name + ': ' + error.message);
+						console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/2: Failed(result: 0)\t' + error.name + ': ' + error.message);
 						response.json({message: '오류가 발생하였습니다', result: 0});
 						return;
 					}
 
-					console.log('label/end/2: Completed(result: 1)');
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/2: Completed(result: 1)');
 					response.json({result: 1});
 					return;
 				});
@@ -690,7 +683,7 @@ routers.post('/end/3', function(request, response) {
 
 	Project.findOne({Title: request.body.title, Writer: request.body.writer}, function(error, project) {
 		if(error) {
-			console.log('label/end/3: Failed(result: 0)\t' + error.name + ': ' + error.message);
+			console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/3: Failed(result: 0)\t' + error.name + ': ' + error.message);
 			response.json({message: '오류가 발생하였습니다', result: 0});
 			return;
 		}
@@ -700,7 +693,7 @@ routers.post('/end/3', function(request, response) {
 		//Write labeling data to result.csv
 		fs.appendFile(dir + '/result/result.csv', request.body.objects + ',\"' + request.body.text + '\"\n', function(error) {
 			if(error) {
-				console.log('label/end/3: Failed(result: 0)\t' + error.name + ': ' + error.message);
+				console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/3: Failed(result: 0)\t' + error.name + ': ' + error.message);
 				response.json({message: '오류가 발생하였습니다', result: 0});
 				return;
 			}
@@ -708,18 +701,18 @@ routers.post('/end/3', function(request, response) {
 			//Update data
 			Project.updateOne({Title: project.Title, Writer: project.Writer}, {$inc: {CurrentProcess: 1}}, function(error, project_u) {
 				if(error) {
-					console.log('label/end/3: Failed(result: 0)\t' + error.name + ': ' + error.message);
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/3: Failed(result: 0)\t' + error.name + ': ' + error.message);
 					response.json({message: '오류가 발생하였습니다', result: 0});
 					return;
 				}
 				User.updateOne({AccountID: decoded.user.AccountID, AccountPW: decoded.user.AccountPW}, {$inc: {Point: project.Point}, $addToSet: {JoinedProject: project.Title}}, function(error, user_u) {
 					if(error) {
-						console.log('label/end/3: Failed(result: 0)\t' + error.name + ': ' + error.message);
+						console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/3: Failed(result: 0)\t' + error.name + ': ' + error.message);
 						response.json({message: '오류가 발생하였습니다', result: 0});
 						return;
 					}
 
-					console.log('label/end/3: Completed(result: 1)');
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tlabel/end/3: Completed(result: 1)');
 					response.json({result: 1});
 					return;
 				});

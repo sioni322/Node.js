@@ -14,7 +14,7 @@ var Project = require('../database/model_project.js');
 routers.use('/load/check', function(request, response) {
 	Project.find({}, function(error, project) {
 		if(error) {
-			console.log('board/load/check: Failed(result: 0)\t' + error.name + ': ' + error.message);
+			console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tboard/load/check: Failed(result: 0)\t' + error.name + ': ' + error.message);
 			response.json({message: '오류가 발생하였습니다', result: 0});
 			return;
 		}
@@ -26,14 +26,14 @@ routers.use('/load/check', function(request, response) {
 			if(moment.duration(date.diff(moment(projects.ClosingDate))).asMilliseconds() >= 0) {
 				Project.updateOne(projects, {$set: {Active: 0}}, function(error, project_u) {
 					if(error) {
-						console.log('board/load/check: Failed(result: 0)\t' + error.name + ': ' + error.message);
+						console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tboard/load/check: Failed(result: 0)\t' + error.name + ': ' + error.message);
 						response.json({message: '오류가 발생하였습니다', result: 0});
 						return;
 					}
 				});
 			}
 		});
-		console.log('board/load/check: Completed(result: 1)');
+		console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tboard/load/check: Completed(result: 1)');
 		response.json({result: 1});
 	});
 });
@@ -42,7 +42,7 @@ routers.use('/load/check', function(request, response) {
 routers.use('/load', function(request, response) {
         Project.find({Active: 1}, function(error, project) {
                 if(project == null) {
-						console.log('board/load: Failed(result: 0)\t' + 'None of project');
+						console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tboard/load: Failed(result: 0)\t' + 'None of project');
                         response.json({message: '등록된 프로젝트가 없습니다', result: 0});
                         return;
 				}
@@ -53,8 +53,7 @@ routers.use('/load', function(request, response) {
 						total_list.push({title:p.Title, writer:p.Writer, contenttext:p.ContentText, TotalProcess:p.TotalProcess, CurrentProcess:p.CurrentProcess, closingdate:date});
 					});
 
-					console.log('board/load: Completed(result: 1)');
-					console.log(total_list);
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tboard/load: Completed(result: 1)');
         		    response.json({project:total_list, result: 1});    
 					return;
                 }
@@ -68,7 +67,7 @@ routers.post('/detail', function(request, response) {
 
     fs.readdir(__dirname + '/../../project/' + request.body.writer + '/' + request.body.title + '/contentimg', (error, files) => {
         if(error) {
-			console.log('board/detail: Failed(result: 0)\t' + error.name + ': ' + error.message);
+			console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tboard/detail: Failed(result: 0)\t' + error.name + ': ' + error.message);
     	    response.json({message: '이미지를 불러오지 못했습니다', result: 0});
        	}
     	if (files.length != 0) {
@@ -83,7 +82,7 @@ routers.post('/detail', function(request, response) {
             		
 			fs.readdir(__dirname + '/../../project/' + request.body.writer + '/' + request.body.title + '/correctimg', (error, files) => {
            		if(error) {
-					console.log('board/detail: Failed(result: 0)\t' + error.name + ': ' + error.message);
+					console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tboard/detail: Failed(result: 0)\t' + error.name + ': ' + error.message);
           			response.json({message: '이미지를 불러오지 못했습니다', result: 0});
          		}
              	if(files.length != 0) {
@@ -99,7 +98,7 @@ routers.post('/detail', function(request, response) {
                     			
 					fs.readdir(__dirname + '/../../project/' + request.body.writer + '/' + request.body.title + '/wrongimg', (error, files) => {
                         if(error) {
-							console.log('board/detail: Failed(result: 0)\t' + error.name + ': ' + error.message);
+							console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tboard/detail: Failed(result: 0)\t' + error.name + ': ' + error.message);
               				response.json({message: '이미지를 불러오지 못했습니다', result: 0});
               			}
              		 	if(files.length != 0) {
@@ -115,7 +114,7 @@ routers.post('/detail', function(request, response) {
                      
 							Project.findOne({Title: request.body.title, Writer: request.body.writer}, function(error, project) {
 								if(error) {
-									console.log('board/detail: Failed(result: 0)\t' + error.name + ': ' + error.message);
+									console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tboard/detail: Failed(result: 0)\t' + error.name + ': ' + error.message);
 									response.json({message: '올바르지 않은 제목/작성자 입니다', result: 0});
 									return;
 								}
@@ -124,8 +123,7 @@ routers.post('/detail', function(request, response) {
 										contenttext: project.ContentText, correcttext: project.CorrectText, wrongtext: project.WrongText,}
 									res['db'] = project_list;
 								
-									console.log('board/detail: Completed(result: 1)');
-									console.log(project_list);
+									console.log(moment().format('YYYY.MM.DD HH:mm:ss') + '\tboard/detail: Completed(result: 1)');
 									response.json(res);
 								}
 							});
